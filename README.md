@@ -2,9 +2,63 @@
 
 > A step-by-step journey of building a Retrieval-Augmented Generation (RAG) system from scratch using Python.
 
-This repository documents my learning journey during my AI internship, where I progressively built a RAG pipeline from simple keyword search to semantic retrieval using Sentence Transformers and FAISS.
+This repository documents my learning journey during my AI Software Engineering internship.
 
-Instead of relying on high-level frameworks such as LangChain, every component is implemented manually to better understand how Retrieval-Augmented Generation (RAG) works under the hood.
+Instead of relying on high-level frameworks such as LangChain or LlamaIndex, every component is implemented manually to understand how Retrieval-Augmented Generation (RAG) works under the hood.
+
+The project gradually evolves from a simple keyword search demo into a modular and engineering-oriented RAG system.
+
+---
+
+# 🏗️ System Architecture (V4)
+
+```text
+                User Question
+                      │
+                      ▼
+             Load Knowledge Base
+                      │
+                      ▼
+        Load / Create Embeddings
+                      │
+                      ▼
+             Build FAISS Index
+                      │
+                      ▼
+              Retrieve Top-K
+                      │
+                      ▼
+              Prompt Builder
+                      │
+                      ▼
+             Enterprise LLM API
+                      │
+                      ▼
+                Generate Answer
+```
+
+---
+
+# 📂 Project Structure
+
+```text
+build-your-own-rag/
+
+├── main.py                 # Workflow Orchestration
+├── config.py               # Project Configuration
+├── utils.py                # Helper Functions
+├── embedding.py            # Embedding & Cache
+├── retrieval.py            # FAISS Retrieval
+├── prompt_builder.py       # Prompt Construction
+├── llm.py                  # LLM API Adapter
+│
+├── knowledge.txt           # Knowledge Base
+│
+├── cache/
+│     embeddings.npy
+│
+└── README.md
+```
 
 ---
 
@@ -12,54 +66,79 @@ Instead of relying on high-level frameworks such as LangChain, every component i
 
 ```text
 Mini RAG V1
-    │
-    ├── Keyword Search
-    │
+│
+├── Keyword Search
+│
 Mini RAG V2
-    │
-    ├── Top-K Retrieval
-    │
+│
+├── Top-K Retrieval
+│
 Mini RAG V3
-    │
-    ├── Sentence Embedding
-    │
+│
+├── Sentence Embedding
+│
 Mini RAG V3.5
-    │
-    ├── FAISS Vector Search
-    ├── Prompt Construction
-    └── LLM Response
-    │
-Mini RAG V4 (Coming Soon)
-    │
-    ├── Embedding Cache
-    ├── Modular Structure
-    └── Engineering Refactor
+│
+├── FAISS Vector Search
+├── Prompt Construction
+└── Enterprise LLM API
+│
+Mini RAG V4 ✅
+│
+├── Embedding Cache
+├── Modular Architecture
+├── Configuration Management
+├── Retrieval Module
+├── Prompt Builder
+└── LLM Adapter
 ```
 
 ---
 
-# 🏗️ Project Workflow
+# 🔄 Workflow
 
 ```text
-          User Question
-                │
-                ▼
-      Sentence Embedding
-                │
-                ▼
-        Vector Search (FAISS)
-                │
-                ▼
-        Top-K Retrieval
-                │
-                ▼
-        Prompt Builder
-                │
-                ▼
-        Large Language Model
-                │
-                ▼
-              Answer
+Knowledge Base
+
+↓
+
+Embedding Model
+
+↓
+
+Vector Embeddings
+
+↓
+
+FAISS Index
+
+↓
+
+User Question
+
+↓
+
+Question Embedding
+
+↓
+
+Similarity Search
+
+↓
+
+Top-K Knowledge
+
+↓
+
+Prompt Builder
+
+↓
+
+Large Language Model
+
+↓
+
+Answer
 ```
 
 ---
@@ -70,39 +149,58 @@ Mini RAG V4 (Coming Soon)
 - Sentence Transformers
 - FAISS
 - NumPy
+- OpenAI SDK (Enterprise API)
+- Qwen LLM
 
 ---
 
-# 🎯 Learning Objectives
+# 🎯 What I Learned
 
-Throughout this project, I aim to understand:
+Throughout this project, I explored:
 
-- How Retrieval works
-- Why Embeddings are needed
-- How FAISS performs similarity search
-- How Prompt Engineering connects Retrieval and LLMs
-- The difference between Embedding Models and Generation Models
+- Tokenization
+- Sentence Embeddings
+- Vector Search
+- FAISS Indexing
+- Prompt Engineering
+- Retrieval-Augmented Generation (RAG)
+- Modular Software Architecture
+- Configuration Management
+- Enterprise LLM API Integration
+
+Rather than simply building a working demo, the focus is on understanding why each component exists and how they work together.
 
 ---
 
-# 🗺️ Project Roadmap
+# 🚀 Future Roadmap
 
 - ✅ Mini RAG V1 — Keyword Search
 - ✅ Mini RAG V2 — Top-K Retrieval
 - ✅ Mini RAG V3 — Sentence Embedding
-- ✅ Mini RAG V3.5 — FAISS + Prompt Engineering
-- ⏳ Mini RAG V4 — Engineering Refactor
-- ⏳ FastAPI Integration
-- ⏳ Ollama Support
-- ⏳ AI Agent Workflow
+- ✅ Mini RAG V3.5 — FAISS + Enterprise LLM
+- ✅ Mini RAG V4 — Engineering Refactor
+
+Next Steps
+
+- ⏳ FastAPI Backend
 - ⏳ Docker Deployment
+- ⏳ Ollama Local Models
+- ⏳ Conversation Memory
+- ⏳ Tool Calling
+- ⏳ AI Agent Workflow
 
 ---
 
 # 💡 Why This Repository?
 
-Many tutorials build RAG systems directly with frameworks such as LangChain or LlamaIndex.
+The goal of this project is **not simply to build another RAG demo**.
 
-In this repository, I intentionally rebuild each component from scratch to gain a deeper understanding of the complete RAG pipeline before using higher-level frameworks.
+Instead, I want to understand:
 
-The goal is **not only to build a working RAG application, but also to understand why every component exists.**
+- Why Retrieval is needed
+- Why Embeddings work
+- Why FAISS is efficient
+- Why Prompt Engineering matters
+- How a production-ready AI application should be architected
+
+This repository records my journey from learning AI fundamentals to building real-world AI applications.
