@@ -4,6 +4,7 @@ from retrieval import retrieve
 from prompt_builder import build_prompt
 from llm import generate_answer
 from utils import load_knowledge
+from schemas import RAGResponse
 
 
 class RAGService:
@@ -34,4 +35,7 @@ class RAGService:
 
         answer = generate_answer(prompt)
 
-        return answer
+        return RAGResponse(
+            answer=answer,
+            contexts=contexts
+        )

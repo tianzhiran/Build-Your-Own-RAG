@@ -19,10 +19,10 @@ def main():
             print("Bye!")
             break
 
-        answer = rag_service.ask(question)
+        response = rag_service.ask(question)
 
         print("\nAnswer:")
-        print(answer)
+        print(response.answer)
 
 
 if __name__ == "__main__":
