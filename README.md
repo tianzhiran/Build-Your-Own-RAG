@@ -204,3 +204,62 @@ Instead, I want to understand:
 - How a production-ready AI application should be architected
 
 This repository records my journey from learning AI fundamentals to building real-world AI applications.
+
+---
+
+# 🌐 FastAPI Backend
+
+Run the backend service:
+
+```bash
+uvicorn api:app --reload
+```
+
+Health check:
+
+```text
+GET /health
+```
+
+Ask a RAG question:
+
+```text
+POST /ask
+```
+
+Request body:
+
+```json
+{
+  "question": "Your question here"
+}
+```
+
+Response body:
+
+```json
+{
+  "answer": "Generated answer",
+  "contexts": ["Retrieved context"]
+}
+```
+
+---
+
+# 🗄️ SQLite Database Foundation
+
+The backend now includes a lightweight SQLite foundation for enterprise-style RAG data management.
+
+Default database path:
+
+```text
+storage/app.db
+```
+
+The initial schema supports:
+
+- `documents` — uploaded document metadata and processing status
+- `chunks` — processed knowledge chunks with embedding references
+- `chat_history` — stored question and answer records
+
+This prepares the project for the next document ingestion step: upload → parse → chunk → embed → store.
