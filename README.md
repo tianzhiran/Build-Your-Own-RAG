@@ -263,3 +263,31 @@ The initial schema supports:
 - `chat_history` — stored question and answer records
 
 This prepares the project for the next document ingestion step: upload → parse → chunk → embed → store.
+
+---
+
+# 📄 Markdown Document Ingestion MVP
+
+Phase 3 starts with Markdown ingestion before adding DOCX or PDF.
+
+Supported endpoint:
+
+```text
+POST /documents/upload
+```
+
+Upload a `.md` or `.markdown` file. The backend will:
+
+1. Save the uploaded file under `storage/uploads/`
+2. Extract Markdown text
+3. Split the text into chunks
+4. Store document metadata in SQLite
+5. Store chunk text and chunk metadata in SQLite
+
+List uploaded documents:
+
+```text
+GET /documents
+```
+
+This phase intentionally does not generate embeddings yet. Embedding and FAISS vector storage are the next retrieval phase.

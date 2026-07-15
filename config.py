@@ -22,6 +22,7 @@ TOP_K = 2
 KNOWLEDGE_FILE = "data/knowledge.txt"
 CACHE_FILE = "cache/embeddings.npy"
 DATABASE_FILE = "storage/app.db"
+UPLOAD_DIR = "storage/uploads"
 
 # ==========================
 # LLM
