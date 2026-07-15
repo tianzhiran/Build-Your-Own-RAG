@@ -1,0 +1,86 @@
+from fastapi import FastAPI
+from fastapi import File
+from fastapi import HTTPException
+from fastapi import UploadFile
+from pydantic import BaseModel
+
+from document_service import get_documents
+from document_service import ingest_markdown_upload
+from rag_service import RAGService
+
+
+app = FastAPI(title="Mini RAG Backend")
+
+rag_service = None
+
+
+class AskRequest(BaseModel):
+    question: str
+
+
+class AskResponse(BaseModel):
+    answer: str
+    contexts: list[str]
+
+
+class DocumentUploadResponse(BaseModel):
+    document_id: str
+    filename: str
+    file_type: str
+    status: str
+    chunk_count: int
+
+
+class DocumentRecord(BaseModel):
+    document_id: str
+    filename: str
+    file_type: str
+    upload_time: str
+    status: str
+
+
+def get_rag_service():
+    global rag_service
+
+    if rag_service is None:
+        rag_service = RAGService()
+
+    return rag_service
+
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
+
+
+@app.post("/ask", response_model=AskResponse)
+def ask(request: AskRequest):
+    response = get_rag_service().ask(request.question)
+
+    return AskResponse(
+        answer=response.answer,
+        contexts=response.contexts
+    )
+
+
+@app.post("/documents/upload", response_model=DocumentUploadResponse)
+async def upload_document(file: UploadFile = File(...)):
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="Uploaded file must have a filename.")
+
+    content = await file.read()
+
+    try:
+        result = ingest_markdown_upload(file.filename, content)
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error))
+
+    return DocumentUploadResponse(**result)
+
+
+@app.get("/documents", response_model=list[DocumentRecord])
+def list_uploaded_documents():
+    return [
+        DocumentRecord(**document)
+        for document in get_documents()
+    ]
