@@ -243,3 +243,23 @@ Response body:
   "contexts": ["Retrieved context"]
 }
 ```
+
+---
+
+# 🗄️ SQLite Database Foundation
+
+The backend now includes a lightweight SQLite foundation for enterprise-style RAG data management.
+
+Default database path:
+
+```text
+storage/app.db
+```
+
+The initial schema supports:
+
+- `documents` — uploaded document metadata and processing status
+- `chunks` — processed knowledge chunks with embedding references
+- `chat_history` — stored question and answer records
+
+This prepares the project for the next document ingestion step: upload → parse → chunk → embed → store.
