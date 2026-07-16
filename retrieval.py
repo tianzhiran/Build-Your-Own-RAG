@@ -3,7 +3,7 @@ import faiss
 from config import VECTOR_DIM
 from config import TOP_K
 
-from embedding import model
+from embedding_service import embed_texts
 
 
 def build_index(embeddings):
@@ -25,10 +25,7 @@ def retrieve(question, index, knowledge):
     Retrieve Top-K knowledge.
     """
 
-    question_embedding = model.encode(
-        [question],
-        convert_to_numpy=True
-    )
+    question_embedding = embed_texts([question])
 
     distances, indices = index.search(
         question_embedding,
