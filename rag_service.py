@@ -1,41 +1,80 @@
-from embedding import load_or_create_embeddings
-from retrieval import build_index
-from retrieval import retrieve
-from prompt_builder import build_prompt
+from database import create_chat_history
+from database import get_chunks_by_ids
+from database import init_db
+from embedding_service import embed_text
 from llm import generate_answer
-from utils import load_knowledge
+from prompt_builder import build_prompt
 from schemas import RAGResponse
+from schemas import RAGSource
+from vector_store import search
+
+
+UNKNOWN_KNOWLEDGE_ANSWER = "当前知识库没有找到相关信息."
 
 
 class RAGService:
     """
-    Reusable RAG workflow service.
+    Reusable RAG workflow service backed by uploaded document chunks.
     """
 
     def __init__(self):
-        self.knowledge = load_knowledge()
-        self.embeddings = load_or_create_embeddings(self.knowledge)
-        self.index = build_index(self.embeddings)
+        init_db()
 
     def ask(self, question):
         """
-        Answer a user question using the RAG pipeline.
+        Answer a user question using SQLite chunks and FAISS retrieval.
         """
 
-        contexts = retrieve(
-            question,
-            self.index,
-            self.knowledge
-        )
+        question_embedding = embed_text(question)
+
+        search_results = search(question_embedding)
+        print(f"[Retrieval] Retrieved {len(search_results)} chunks")
+
+        chunk_ids = [
+            result["chunk_id"]
+            for result in search_results
+        ]
+        chunks = get_chunks_by_ids(chunk_ids)
+
+        if not chunks:
+            create_chat_history(question, UNKNOWN_KNOWLEDGE_ANSWER)
+
+            return RAGResponse(
+                answer=UNKNOWN_KNOWLEDGE_ANSWER,
+                contexts=[],
+                sources=[]
+            )
+
+        contexts = [
+            chunk["chunk_text"]
+            for chunk in chunks
+        ]
+        distance_by_chunk_id = {
+            result["chunk_id"]: result["distance"]
+            for result in search_results
+        }
+        sources = [
+            RAGSource(
+                document_id=chunk["document_id"],
+                chunk_id=chunk["chunk_id"],
+                filename=chunk["filename"],
+                distance=distance_by_chunk_id[chunk["chunk_id"]]
+            )
+            for chunk in chunks
+        ]
 
         prompt = build_prompt(
             contexts,
             question
         )
 
+        print("[LLM] Generating response")
         answer = generate_answer(prompt)
+
+        create_chat_history(question, answer)
 
         return RAGResponse(
             answer=answer,
-            contexts=contexts
+            contexts=contexts,
+            sources=sources
         )

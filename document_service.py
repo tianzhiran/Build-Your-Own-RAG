@@ -12,6 +12,7 @@ from database import create_chunk
 from database import create_document
 from database import init_db
 from database import list_documents
+from database import update_chunk_embedding_ref
 from database import update_document_status
 from loaders.markdown_loader import is_markdown_file
 from loaders.markdown_loader import load_markdown
@@ -67,14 +68,39 @@ def ingest_markdown_file(
         chunks = chunk_text(text, chunk_size=chunk_size)
         print(f"[Chunk] Created {len(chunks)} chunks")
 
+        chunk_records = []
+
         for chunk_index, chunk in enumerate(chunks):
-            create_chunk(
+            chunk_id = create_chunk(
                 document_id,
                 chunk,
                 chunk_index,
                 embedding_ref=None,
                 db_path=db_path
             )
+            chunk_records.append(
+                {
+                    "chunk_id": chunk_id,
+                    "document_id": document_id
+                }
+            )
+
+        if chunks:
+            from embedding_service import embed_texts
+            from vector_store import add_vectors
+
+            embeddings = embed_texts(chunks)
+            print("[Embedding] Generated vectors")
+
+            vector_metadata = add_vectors(embeddings, chunk_records)
+            print("[VectorStore] Stored vectors")
+
+            for item in vector_metadata:
+                update_chunk_embedding_ref(
+                    item["chunk_id"],
+                    f"faiss:{item['vector_index']}",
+                    db_path=db_path
+                )
 
         update_document_status(
             document_id,

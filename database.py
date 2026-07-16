@@ -267,3 +267,56 @@ def list_chat_history(db_path=DATABASE_FILE):
         ).fetchall()
 
     return [row_to_dict(row) for row in rows]
+
+
+def update_chunk_embedding_ref(chunk_id, embedding_ref, db_path=DATABASE_FILE):
+    with get_connection(db_path) as connection:
+        connection.execute(
+            """
+            UPDATE chunks
+            SET embedding_ref = ?
+            WHERE chunk_id = ?
+            """,
+            (
+                embedding_ref,
+                chunk_id
+            )
+        )
+
+
+def get_chunks_by_ids(chunk_ids, db_path=DATABASE_FILE):
+    if not chunk_ids:
+        return []
+
+    placeholders = ", ".join(["?"] * len(chunk_ids))
+
+    with get_connection(db_path) as connection:
+        rows = connection.execute(
+            f"""
+            SELECT
+                chunks.chunk_id,
+                chunks.document_id,
+                chunks.chunk_index,
+                chunks.chunk_text,
+                chunks.embedding_ref,
+                chunks.created_at,
+                documents.filename,
+                documents.file_type
+            FROM chunks
+            JOIN documents
+                ON chunks.document_id = documents.document_id
+            WHERE chunks.chunk_id IN ({placeholders})
+            """,
+            chunk_ids
+        ).fetchall()
+
+    chunks_by_id = {
+        row["chunk_id"]: row_to_dict(row)
+        for row in rows
+    }
+
+    return [
+        chunks_by_id[chunk_id]
+        for chunk_id in chunk_ids
+        if chunk_id in chunks_by_id
+    ]

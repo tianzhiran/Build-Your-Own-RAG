@@ -240,7 +240,15 @@ Response body:
 ```json
 {
   "answer": "Generated answer",
-  "contexts": ["Retrieved context"]
+  "contexts": ["Retrieved context"],
+  "sources": [
+    {
+      "document_id": "document id",
+      "chunk_id": "chunk id",
+      "filename": "source document.md",
+      "distance": 0.0
+    }
+  ]
 }
 ```
 
@@ -315,3 +323,34 @@ Phase 4.2 adds a minimal FAISS vector store layer:
 - `search(...)` returns vector matches with distance and chunk metadata references
 
 This prepares the next step: embedding uploaded Markdown chunks and retrieving them during `/ask`.
+
+
+---
+
+# 🔎 SQLite + Vector RAG Retrieval
+
+Phase 4.3 upgrades the RAG service to retrieve uploaded document chunks instead of the old static `data/knowledge.txt` flow.
+
+Question answering now follows this flow:
+
+```text
+Question
+↓
+embed_text(question)
+↓
+vector_store.search(question_embedding)
+↓
+get matching chunks from SQLite
+↓
+build prompt from retrieved chunk text
+↓
+LLM answer
+↓
+return answer + contexts + sources
+```
+
+If no uploaded chunks are found in the vector store, the service returns:
+
+```text
+当前知识库没有找到相关信息.
+```

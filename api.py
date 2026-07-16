@@ -17,9 +17,17 @@ class AskRequest(BaseModel):
     question: str
 
 
+class SourceResponse(BaseModel):
+    document_id: str
+    chunk_id: str
+    filename: str
+    distance: float
+
+
 class AskResponse(BaseModel):
     answer: str
     contexts: list[str]
+    sources: list[SourceResponse]
 
 
 class DocumentUploadResponse(BaseModel):
@@ -60,7 +68,16 @@ def ask(request: AskRequest):
 
     return AskResponse(
         answer=response.answer,
-        contexts=response.contexts
+        contexts=response.contexts,
+        sources=[
+            SourceResponse(
+                document_id=source.document_id,
+                chunk_id=source.chunk_id,
+                filename=source.filename,
+                distance=source.distance
+            )
+            for source in response.sources
+        ]
     )
 
 
