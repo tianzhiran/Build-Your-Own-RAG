@@ -1,14 +1,8 @@
 import os
 import numpy as np
 
-from sentence_transformers import SentenceTransformer
-
-from config import EMBEDDING_MODEL
 from config import CACHE_FILE
-
-
-# Load embedding model only once
-model = SentenceTransformer(EMBEDDING_MODEL)
+from embedding_service import embed_texts
 
 
 def create_embeddings(knowledge):
@@ -24,10 +18,7 @@ def create_embeddings(knowledge):
 
     print("[Embedding] Creating embeddings...")
 
-    embeddings = model.encode(
-        knowledge,
-        convert_to_numpy=True
-    )
+    embeddings = embed_texts(knowledge)
 
     print(f"[Embedding] Shape: {embeddings.shape}")
 
