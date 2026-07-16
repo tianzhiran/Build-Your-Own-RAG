@@ -291,3 +291,14 @@ GET /documents
 ```
 
 This phase intentionally does not generate embeddings yet. Embedding and FAISS vector storage are the next retrieval phase.
+
+---
+
+# 🧠 Embedding Service MVP
+
+Phase 4.1 adds a lightweight embedding service wrapper:
+
+- `embed_text(text)` for one query or chunk
+- `embed_texts(texts)` for batch document chunks
+
+The existing static RAG flow now reuses this wrapper, preparing the next step: storing uploaded Markdown chunk vectors in FAISS.
