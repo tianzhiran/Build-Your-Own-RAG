@@ -23,6 +23,8 @@ KNOWLEDGE_FILE = "data/knowledge.txt"
 CACHE_FILE = "cache/embeddings.npy"
 DATABASE_FILE = "storage/app.db"
 UPLOAD_DIR = "storage/uploads"
+VECTOR_INDEX_FILE = "storage/faiss.index"
+VECTOR_METADATA_FILE = "storage/vector_metadata.json"
 
 # ==========================
 # LLM

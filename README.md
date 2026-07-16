@@ -302,3 +302,16 @@ Phase 4.1 adds a lightweight embedding service wrapper:
 - `embed_texts(texts)` for batch document chunks
 
 The existing static RAG flow now reuses this wrapper, preparing the next step: storing uploaded Markdown chunk vectors in FAISS.
+
+---
+
+# 🧭 Vector Store MVP
+
+Phase 4.2 adds a minimal FAISS vector store layer:
+
+- `storage/faiss.index` stores the FAISS index
+- `storage/vector_metadata.json` maps FAISS vector positions to `chunk_id` and `document_id`
+- `add_vectors(...)` appends chunk vectors and metadata
+- `search(...)` returns vector matches with distance and chunk metadata references
+
+This prepares the next step: embedding uploaded Markdown chunks and retrieving them during `/ask`.

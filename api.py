@@ -6,7 +6,6 @@ from pydantic import BaseModel
 
 from document_service import get_documents
 from document_service import ingest_markdown_upload
-from rag_service import RAGService
 
 
 app = FastAPI(title="Mini RAG Backend")
@@ -43,6 +42,8 @@ def get_rag_service():
     global rag_service
 
     if rag_service is None:
+        from rag_service import RAGService
+
         rag_service = RAGService()
 
     return rag_service
