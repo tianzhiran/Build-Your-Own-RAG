@@ -135,3 +135,69 @@ def search(
         )
 
     return results
+
+
+def rebuild_index_from_metadata(
+    retained_metadata,
+    source_index,
+    index_file=VECTOR_INDEX_FILE,
+    metadata_file=VECTOR_METADATA_FILE,
+    vector_dim=VECTOR_DIM
+):
+    rebuilt_index = create_index(vector_dim)
+    rebuilt_metadata = []
+    retained_vectors = []
+
+    for item in retained_metadata:
+        vector = source_index.reconstruct(item["vector_index"])
+        retained_vectors.append(vector)
+
+    if retained_vectors:
+        rebuilt_index.add(prepare_vectors(retained_vectors))
+
+    for new_index, item in enumerate(retained_metadata):
+        rebuilt_metadata.append(
+            {
+                "vector_index": new_index,
+                "chunk_id": item["chunk_id"],
+                "document_id": item["document_id"]
+            }
+        )
+
+    save_index(rebuilt_index, index_file=index_file)
+    save_metadata(rebuilt_metadata, metadata_file=metadata_file)
+
+    return rebuilt_metadata
+
+
+def remove_document_vectors(
+    document_id,
+    index_file=VECTOR_INDEX_FILE,
+    metadata_file=VECTOR_METADATA_FILE,
+    vector_dim=VECTOR_DIM
+):
+    metadata = load_metadata(metadata_file=metadata_file)
+
+    if not metadata:
+        return 0
+
+    retained_metadata = [
+        item
+        for item in metadata
+        if item["document_id"] != document_id
+    ]
+    removed_count = len(metadata) - len(retained_metadata)
+
+    if removed_count == 0:
+        return 0
+
+    source_index = load_index(index_file=index_file, vector_dim=vector_dim)
+    rebuild_index_from_metadata(
+        retained_metadata,
+        source_index,
+        index_file=index_file,
+        metadata_file=metadata_file,
+        vector_dim=vector_dim
+    )
+
+    return removed_count

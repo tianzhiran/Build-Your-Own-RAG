@@ -460,3 +460,45 @@ Minimum useful tests:
 ```
 
 After these pass, start the React frontend.
+
+---
+
+## 12. Delete an Uploaded Document
+
+If you upload the wrong document version, remove it with:
+
+```bash
+curl -X DELETE http://127.0.0.1:8000/documents/{document_id}
+```
+
+Example:
+
+```bash
+curl -X DELETE http://127.0.0.1:8000/documents/your-document-id
+```
+
+Expected response shape:
+
+```json
+{
+  "document_id": "your-document-id",
+  "deleted": true,
+  "removed_vectors": 3
+}
+```
+
+What happens internally:
+
+```text
+DELETE /documents/{document_id}
+↓
+Remove matching vector metadata
+↓
+Rebuild FAISS index for remaining vectors
+↓
+Delete chunks from SQLite
+↓
+Delete document from SQLite
+```
+
+Use this when you upload the wrong file, for example an outdated `OTN_manual_v1.md`.

@@ -4,6 +4,7 @@ from fastapi import HTTPException
 from fastapi import UploadFile
 from pydantic import BaseModel
 
+from document_service import delete_document_by_id
 from document_service import get_documents
 from document_service import ingest_markdown_upload
 
@@ -44,6 +45,12 @@ class DocumentRecord(BaseModel):
     file_type: str
     upload_time: str
     status: str
+
+
+class DocumentDeleteResponse(BaseModel):
+    document_id: str
+    deleted: bool
+    removed_vectors: int
 
 
 def get_rag_service():
@@ -102,3 +109,13 @@ def list_uploaded_documents():
         DocumentRecord(**document)
         for document in get_documents()
     ]
+
+
+@app.delete("/documents/{document_id}", response_model=DocumentDeleteResponse)
+def delete_uploaded_document(document_id: str):
+    try:
+        result = delete_document_by_id(document_id)
+    except ValueError as error:
+        raise HTTPException(status_code=404, detail=str(error))
+
+    return DocumentDeleteResponse(**result)

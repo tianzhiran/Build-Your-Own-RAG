@@ -320,3 +320,41 @@ def get_chunks_by_ids(chunk_ids, db_path=DATABASE_FILE):
         for chunk_id in chunk_ids
         if chunk_id in chunks_by_id
     ]
+
+def get_document(document_id, db_path=DATABASE_FILE):
+    with get_connection(db_path) as connection:
+        row = connection.execute(
+            """
+            SELECT
+                document_id,
+                filename,
+                file_type,
+                upload_time,
+                status
+            FROM documents
+            WHERE document_id = ?
+            """,
+            (document_id,)
+        ).fetchone()
+
+    return row_to_dict(row)
+
+
+def delete_document(document_id, db_path=DATABASE_FILE):
+    with get_connection(db_path) as connection:
+        connection.execute(
+            """
+            DELETE FROM chunks
+            WHERE document_id = ?
+            """,
+            (document_id,)
+        )
+        cursor = connection.execute(
+            """
+            DELETE FROM documents
+            WHERE document_id = ?
+            """,
+            (document_id,)
+        )
+
+    return cursor.rowcount > 0

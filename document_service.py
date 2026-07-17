@@ -151,3 +151,25 @@ def get_documents(db_path=DATABASE_FILE):
     init_db(db_path)
 
     return list_documents(db_path=db_path)
+
+
+def delete_document_by_id(document_id, db_path=DATABASE_FILE):
+    from database import delete_document
+    from database import get_document
+    from vector_store import remove_document_vectors
+
+    init_db(db_path)
+
+    document = get_document(document_id, db_path=db_path)
+
+    if not document:
+        raise ValueError("Document not found.")
+
+    removed_vectors = remove_document_vectors(document_id)
+    deleted = delete_document(document_id, db_path=db_path)
+
+    return {
+        "document_id": document_id,
+        "deleted": deleted,
+        "removed_vectors": removed_vectors
+    }
