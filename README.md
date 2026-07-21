@@ -502,3 +502,9 @@ Delete document from SQLite
 ```
 
 Use this when you upload the wrong file, for example an outdated `OTN_manual_v1.md`.
+---
+
+## 13. System Summary and Roadmap
+
+A detailed Chinese summary of the current RAG backend and the recommended iteration plan for TXT, PDF, metadata, retrieval-quality, frontend, and production-readiness work is available in [`SYSTEM_OVERVIEW_AND_ROADMAP.md`](SYSTEM_OVERVIEW_AND_ROADMAP.md).
+
