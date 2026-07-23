@@ -21,15 +21,33 @@ export type AskResponse = {
   sources: Source[];
 };
 
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, options);
-
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || `Request failed with ${response.status}`);
+function extractErrorMessage(payload: string) {
+  if (!payload) {
+    return "Request failed.";
   }
 
-  return response.json() as Promise<T>;
+  try {
+    const parsed = JSON.parse(payload) as { detail?: string };
+
+    return parsed.detail ?? payload;
+  } catch {
+    return payload;
+  }
+}
+
+async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  const response = await fetch(`${API_BASE_URL}${path}`, options);
+  const payload = await response.text();
+
+  if (!response.ok) {
+    throw new Error(extractErrorMessage(payload) || `Request failed with ${response.status}`);
+  }
+
+  if (!payload) {
+    return undefined as T;
+  }
+
+  return JSON.parse(payload) as T;
 }
 
 export function listDocuments() {

@@ -1,4 +1,5 @@
 import json
+from json import JSONDecodeError
 import os
 
 import faiss
@@ -37,8 +38,14 @@ def load_metadata(metadata_file=VECTOR_METADATA_FILE):
     if not os.path.exists(metadata_file):
         return []
 
+    if os.path.getsize(metadata_file) == 0:
+        return []
+
     with open(metadata_file, "r", encoding="utf-8") as file:
-        return json.load(file)
+        try:
+            return json.load(file)
+        except JSONDecodeError:
+            return []
 
 
 def save_metadata(metadata, metadata_file=VECTOR_METADATA_FILE):
