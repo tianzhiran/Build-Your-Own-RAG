@@ -5,8 +5,8 @@ A lightweight enterprise-style RAG backend for communication-domain knowledge, e
 The current system supports:
 
 - FastAPI backend
-- Markdown document upload
-- Text extraction and chunking
+- Markdown, TXT, and text-based PDF document upload
+- Text extraction through document loaders and chunking
 - SQLite document/chunk/chat storage
 - SentenceTransformer embeddings
 - FAISS vector storage
@@ -26,7 +26,7 @@ FastAPI Backend
         ↓
 Document Service ──────→ SQLite documents / chunks
         ↓                         ↓
-Markdown Loader                  chunk metadata
+Document Loader Registry                  chunk metadata
         ↓                         ↓
 Chunking                         embedding_ref
         ↓
@@ -55,12 +55,15 @@ Build-Your-Own-RAG/
 ├── config.py                 # Project configuration
 │
 ├── database.py               # SQLite schema and DB helpers
-├── document_service.py       # Markdown upload → chunk → embed → vector store
+├── document_service.py       # Markdown/TXT/PDF upload → chunk → embed → vector store
 ├── chunking.py               # Paragraph-aware text chunking
 │
 ├── loaders/
 │   ├── __init__.py
-│   └── markdown_loader.py    # Markdown file validation and loading
+│   ├── loader_registry.py    # Select document loader by file extension
+│   ├── markdown_loader.py    # Markdown file validation and loading
+│   ├── text_loader.py        # TXT file validation and loading
+│   └── pdf_loader.py         # Text-based PDF validation and loading
 │
 ├── embedding_service.py      # embed_text / embed_texts wrapper
 ├── vector_store.py           # FAISS index + vector metadata mapping
@@ -91,7 +94,7 @@ Build-Your-Own-RAG/
 
 ## 3. What Can Run Now?
 
-You can run the backend and test the full Markdown RAG flow from the command line.
+You can run the backend and test the full Markdown/TXT/PDF RAG flow from the command line.
 
 You do **not** need a frontend yet.
 
@@ -108,9 +111,9 @@ Recommended testing order:
 1. Install dependencies
 2. Start FastAPI
 3. Check /health
-4. Upload a Markdown file
+4. Upload a Markdown/TXT/PDF file
 5. List uploaded documents
-6. Ask a question based on that Markdown file
+6. Ask a question based on that Markdown/TXT/PDF file
 7. Inspect answer + contexts + sources
 ```
 
@@ -328,7 +331,7 @@ These files are created while running the backend:
 storage/app.db                  # SQLite database
 storage/faiss.index             # FAISS vector index
 storage/vector_metadata.json    # vector_index → chunk_id / document_id mapping
-storage/uploads/                # uploaded Markdown files
+storage/uploads/                # uploaded Markdown/TXT/PDF files
 ```
 
 If you want to reset local test data:
@@ -398,7 +401,7 @@ Not yet.
 Before building React, first verify the backend end-to-end:
 
 ```text
-Markdown upload works
+Markdown/TXT/PDF upload works
 ↓
 SQLite records are created
 ↓
@@ -434,8 +437,7 @@ Important next improvements:
 3. Improve chunking for communication manuals and alarm procedures.
 4. Add source display improvements.
 5. Add DOCX loader.
-6. Add PDF loader.
-7. Add React frontend.
+6. Add React frontend.
 
 ---
 
@@ -452,7 +454,7 @@ Add a small test suite for the backend RAG pipeline.
 Minimum useful tests:
 
 ```text
-1. Markdown upload creates document + chunks
+1. Markdown/TXT/PDF upload creates document + chunks
 2. Chunk embedding_ref is updated after vector storage
 3. Vector metadata maps vector_index to chunk_id/document_id
 4. /ask returns answer + contexts + sources
@@ -502,3 +504,53 @@ Delete document from SQLite
 ```
 
 Use this when you upload the wrong file, for example an outdated `OTN_manual_v1.md`.
+---
+
+## 13. System Summary and Roadmap
+
+A detailed Chinese summary of the current RAG backend and the recommended iteration plan for TXT, PDF, metadata, retrieval-quality, frontend, and production-readiness work is available in [`SYSTEM_OVERVIEW_AND_ROADMAP.md`](SYSTEM_OVERVIEW_AND_ROADMAP.md).
+
+---
+
+## 14. Frontend MVP
+
+A lightweight React + Vite frontend is available in `frontend/`. It provides:
+
+- A Notion/Linear-inspired knowledge library page for uploading Markdown/TXT/PDF files.
+- A document list with status and delete actions.
+- A chat panel that calls the FastAPI `/ask` endpoint.
+- Expandable source/context display for retrieved chunks.
+
+Run it in development mode:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Default local URLs:
+
+```text
+Frontend: http://127.0.0.1:5173
+FastAPI backend: http://127.0.0.1:8000
+FastAPI API docs: http://127.0.0.1:8000/docs
+```
+
+Use `VITE_API_BASE_URL` if the backend runs on a different URL.
+
+### Frontend upload troubleshooting
+
+If the frontend shows `Failed to fetch` while uploading, check that the FastAPI backend is running at the same host on port `8000`. The frontend automatically calls `http://<current-browser-host>:8000` unless `VITE_API_BASE_URL` is set.
+
+Examples:
+
+```bash
+# terminal 1
+uvicorn api:app --reload
+
+# terminal 2
+cd frontend
+npm run dev
+```
+
