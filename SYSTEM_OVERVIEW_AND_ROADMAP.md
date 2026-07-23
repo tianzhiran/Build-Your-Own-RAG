@@ -26,8 +26,8 @@
 ### 2.1 已支持能力
 
 - FastAPI 后端服务。
-- Markdown 文档上传。
-- 通过统一 Loader Registry 读取文档文本（当前已注册 Markdown Loader）。
+- Markdown、TXT、文本型 PDF 文档上传。
+- 通过统一 Loader Registry 读取文档文本（当前已注册 Markdown、TXT、PDF Loader）。
 - 段落感知的文本切分。
 - SQLite 存储：
   - documents：文档记录。
@@ -45,7 +45,7 @@
 | 接口 | 方法 | 作用 |
 | --- | --- | --- |
 | `/health` | GET | 服务健康检查 |
-| `/documents/upload` | POST | 上传 Markdown 文档并入库 |
+| `/documents/upload` | POST | 上传 Markdown/TXT/文本型 PDF 文档并入库 |
 | `/documents` | GET | 查看已上传文档列表 |
 | `/documents/{document_id}` | DELETE | 删除文档、片段与对应向量 |
 | `/ask` | POST | 基于知识库提问 |
@@ -61,7 +61,7 @@ FastAPI API 层
         ↓
 Document Service 文档服务
         ↓
-Loader 文档加载器（当前：Markdown）
+Loader 文档加载器（当前：Markdown/TXT/PDF）
         ↓
 Chunking 文本切分
         ↓
@@ -88,6 +88,8 @@ OpenAI-compatible LLM
 | `document_service.py` | 文档保存、调用统一 Loader、切分、入库、向量化、删除编排 |
 | `loaders/loader_registry.py` | 根据文件扩展名选择对应 Loader |
 | `loaders/markdown_loader.py` | Markdown 文件类型判断和文本读取 |
+| `loaders/text_loader.py` | TXT 文件类型判断和文本读取 |
+| `loaders/pdf_loader.py` | 文本型 PDF 文件类型判断和文本抽取 |
 | `chunking.py` | 将长文本切分成适合检索的 chunk |
 | `embedding_service.py` | 加载 SentenceTransformer 并生成文本向量 |
 | `vector_store.py` | 维护 FAISS 索引和向量元数据 |
@@ -151,7 +153,7 @@ generate_answer 调用 LLM
 
 ## 6. 当前系统边界与风险
 
-1. **文件格式有限**：目前只支持 Markdown，还不支持 TXT、PDF、DOCX、HTML 等常见知识文档。
+1. **文件格式仍需继续扩展**：目前已支持 Markdown、TXT、文本型 PDF；还不支持扫描版 PDF OCR、DOCX、HTML 等知识文档。
 2. **配置安全性不足**：API Key 仍在 `config.py` 中，应迁移到环境变量或 `.env`。
 3. **缺少自动化测试**：上传、切分、向量写入、检索、删除等主流程需要测试覆盖。
 4. **检索策略较基础**：当前使用 FAISS L2 Top-K 检索，还没有相似度阈值、重排序、混合检索或多路召回。
@@ -202,13 +204,15 @@ def load_text(file_path: str) -> str:
 
 ### 7.2 迭代二：增加 TXT 文档支持
 
+状态：已完成基础版。当前已新增 `loaders/text_loader.py`，支持 `.txt` UTF-8 文本读取。
+
 目标：快速支持最简单的纯文本知识库导入。
 
 建议实现：
 
-1. 新增 `loaders/text_loader.py`。
-2. 支持扩展名：`.txt`。
-3. 优先使用 UTF-8 读取。
+1. 已新增 `loaders/text_loader.py`。
+2. 已支持扩展名：`.txt`。
+3. 当前优先使用 UTF-8 读取。
 4. 如果后续有中文 Windows 文档，可再增加编码检测，例如 `charset-normalizer`。
 5. 上传响应的 `file_type` 返回 `text`。
 
@@ -222,17 +226,17 @@ def load_text(file_path: str) -> str:
 
 ### 7.3 迭代三：增加 PDF 文档支持
 
+状态：已完成基础版。当前已新增 `loaders/pdf_loader.py`，支持通过 `pypdf` 抽取文本型 PDF，并对扫描版 PDF 返回明确错误。
+
 目标：支持企业手册、设备说明书、告警处理手册等常见 PDF 知识文档。
 
 建议实现：
 
-1. 新增 PDF 解析依赖，二选一：
-   - `pypdf`：轻量，适合普通文本型 PDF。
-   - `pdfplumber`：对表格和版面更友好，但依赖更重。
-2. 新增 `loaders/pdf_loader.py`。
-3. 支持扩展名：`.pdf`。
-4. 按页抽取文本，并在 chunk metadata 中尽量保留页码。
-5. 对扫描版 PDF，暂不强行支持 OCR，可后续单独做 OCR 迭代。
+1. 已新增轻量 PDF 解析依赖 `pypdf`，适合普通文本型 PDF。
+2. 已新增 `loaders/pdf_loader.py`。
+3. 已支持扩展名：`.pdf`。
+4. 当前在抽取文本中保留 `[Page N]` 标记；后续如需更强来源定位，再扩展 chunk metadata。
+5. 对扫描版 PDF，暂不强行支持 OCR，后续单独做 OCR 迭代。
 
 建议的 PDF metadata：
 
@@ -386,16 +390,14 @@ frontend/
 ## 9. 建议优先完成的任务清单
 
 1. 迁移密钥配置到环境变量。
-2. 增加 TXT 支持。
-3. 增加 PDF 支持。
-4. 增加 pytest 测试覆盖上传、删除和问答基础流程。
-5. 增加前端知识库管理页。
-6. 增加前端 Chat 页。
-7. 优化 Prompt 和来源展示。
-8. 增加日志、错误信息和运行文档。
+2. 增加 pytest 测试覆盖上传、删除和问答基础流程。
+3. 增加前端知识库管理页。
+4. 增加前端 Chat 页。
+5. 优化 Prompt 和来源展示。
+6. 增加日志、错误信息和运行文档。
 
 ---
 
 ## 10. 一句话总结
 
-当前系统已经具备 RAG MVP 的完整后端闭环：上传 Markdown、切分、向量化、入库、检索、调用 LLM 回答；下一阶段最应该基于已抽象的文档 Loader，依次增加 TXT、PDF 支持，最后基于稳定后端实现前端知识库管理和 Chat 问答页面。
+当前系统已经具备 RAG MVP 的完整后端闭环：上传 Markdown/TXT/文本型 PDF、切分、向量化、入库、检索、调用 LLM 回答；下一阶段应在不增加过多复杂性的前提下，优先补少量测试，然后实现前端知识库管理和 Chat 问答页面。

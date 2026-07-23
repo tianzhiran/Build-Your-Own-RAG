@@ -1,8 +1,12 @@
 from loaders import markdown_loader
+from loaders import pdf_loader
+from loaders import text_loader
 
 
 LOADERS = [
-    markdown_loader
+    markdown_loader,
+    text_loader,
+    pdf_loader
 ]
 
 
