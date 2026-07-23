@@ -27,7 +27,7 @@
 
 - FastAPI 后端服务。
 - Markdown 文档上传。
-- Markdown 文本读取。
+- 通过统一 Loader Registry 读取文档文本（当前已注册 Markdown Loader）。
 - 段落感知的文本切分。
 - SQLite 存储：
   - documents：文档记录。
@@ -85,7 +85,8 @@ OpenAI-compatible LLM
 | 模块 | 当前职责 |
 | --- | --- |
 | `api.py` | 定义 FastAPI 路由、请求响应模型和接口入口 |
-| `document_service.py` | 文档保存、加载、切分、入库、向量化、删除编排 |
+| `document_service.py` | 文档保存、调用统一 Loader、切分、入库、向量化、删除编排 |
+| `loaders/loader_registry.py` | 根据文件扩展名选择对应 Loader |
 | `loaders/markdown_loader.py` | Markdown 文件类型判断和文本读取 |
 | `chunking.py` | 将长文本切分成适合检索的 chunk |
 | `embedding_service.py` | 加载 SentenceTransformer 并生成文本向量 |
@@ -109,7 +110,7 @@ POST /documents/upload
 ↓
 保存原始上传文件到 storage/uploads/
 ↓
-load_markdown 读取文本
+loader_registry 选择 Loader 并读取文本
 ↓
 chunk_text 切分文本
 ↓
@@ -166,11 +167,13 @@ generate_answer 调用 LLM
 
 ### 7.1 迭代一：统一文档 Loader 架构
 
+状态：已完成基础版。当前已有 `loaders/loader_registry.py`，文档服务已通过统一入口选择 Loader，Markdown Loader 已适配 `supports` / `load_text` 接口。
+
 目标：为 TXT、PDF、DOCX 等扩展做准备，避免每增加一种文件类型都修改大量业务逻辑。
 
 建议改造：
 
-1. 新增统一 Loader 接口，例如：
+1. 已新增统一 Loader 接口，例如：
 
 ```python
 def supports(filename: str) -> bool:
@@ -181,13 +184,15 @@ def load_text(file_path: str) -> str:
     ...
 ```
 
-2. 新增 `loaders/loader_registry.py`：
+2. 已新增 `loaders/loader_registry.py`：
    - 根据文件扩展名选择对应 loader。
    - 文档服务只调用统一的 `load_document_text(file_path)`。
 
-3. 将 `document_service.ingest_markdown_*` 逐步升级为更通用的：
+3. 已将文档服务主流程升级为更通用的：
    - `ingest_document_file`
    - `ingest_document_upload`
+
+原有 `ingest_markdown_file` / `ingest_markdown_upload` 已保留为兼容入口。
 
 验收标准：
 
@@ -381,17 +386,16 @@ frontend/
 ## 9. 建议优先完成的任务清单
 
 1. 迁移密钥配置到环境变量。
-2. 抽象通用文档加载流程。
-3. 增加 TXT 支持。
-4. 增加 PDF 支持。
-5. 增加 pytest 测试覆盖上传、删除和问答基础流程。
-6. 增加前端知识库管理页。
-7. 增加前端 Chat 页。
-8. 优化 Prompt 和来源展示。
-9. 增加日志、错误信息和运行文档。
+2. 增加 TXT 支持。
+3. 增加 PDF 支持。
+4. 增加 pytest 测试覆盖上传、删除和问答基础流程。
+5. 增加前端知识库管理页。
+6. 增加前端 Chat 页。
+7. 优化 Prompt 和来源展示。
+8. 增加日志、错误信息和运行文档。
 
 ---
 
 ## 10. 一句话总结
 
-当前系统已经具备 RAG MVP 的完整后端闭环：上传 Markdown、切分、向量化、入库、检索、调用 LLM 回答；下一阶段最应该先抽象文档 Loader，再依次增加 TXT、PDF 支持，最后基于稳定后端实现前端知识库管理和 Chat 问答页面。
+当前系统已经具备 RAG MVP 的完整后端闭环：上传 Markdown、切分、向量化、入库、检索、调用 LLM 回答；下一阶段最应该基于已抽象的文档 Loader，依次增加 TXT、PDF 支持，最后基于稳定后端实现前端知识库管理和 Chat 问答页面。

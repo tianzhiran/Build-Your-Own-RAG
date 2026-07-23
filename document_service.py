@@ -14,11 +14,19 @@ from database import init_db
 from database import list_documents
 from database import update_chunk_embedding_ref
 from database import update_document_status
-from loaders.markdown_loader import is_markdown_file
-from loaders.markdown_loader import load_markdown
+from loaders.loader_registry import get_file_type
+from loaders.loader_registry import get_supported_extensions
+from loaders.loader_registry import is_supported_file
+from loaders.loader_registry import load_document_text
 
 
-FILE_TYPE_MARKDOWN = "markdown"
+def raise_unsupported_file_type_error():
+    supported_extensions = ", ".join(get_supported_extensions())
+
+    raise ValueError(
+        "Unsupported file type. Supported file types: "
+        f"{supported_extensions}."
+    )
 
 
 def ensure_upload_dir(upload_dir=UPLOAD_DIR):
@@ -42,27 +50,30 @@ def save_uploaded_file(filename, content, upload_dir=UPLOAD_DIR):
     return file_path
 
 
-def ingest_markdown_file(
+def ingest_document_file(
     file_path,
     original_filename=None,
     db_path=DATABASE_FILE,
     chunk_size=800
 ):
-    if not is_markdown_file(file_path):
-        raise ValueError("Only Markdown files are supported in this ingestion phase.")
+    filename = original_filename or Path(file_path).name
+
+    if not is_supported_file(filename):
+        raise_unsupported_file_type_error()
+
+    file_type = get_file_type(filename)
 
     init_db(db_path)
 
-    filename = original_filename or Path(file_path).name
     document_id = create_document(
         filename,
-        FILE_TYPE_MARKDOWN,
+        file_type,
         status=DOCUMENT_STATUS_PROCESSING,
         db_path=db_path
     )
 
     try:
-        text = load_markdown(file_path)
+        text = load_document_text(file_path)
         print(f"[Document] Loaded {filename}")
 
         chunks = chunk_text(text, chunk_size=chunk_size)
@@ -112,7 +123,7 @@ def ingest_markdown_file(
         return {
             "document_id": document_id,
             "filename": filename,
-            "file_type": FILE_TYPE_MARKDOWN,
+            "file_type": file_type,
             "status": DOCUMENT_STATUS_COMPLETED,
             "chunk_count": len(chunks)
         }
@@ -127,6 +138,40 @@ def ingest_markdown_file(
         raise
 
 
+def ingest_document_upload(
+    filename,
+    content,
+    db_path=DATABASE_FILE,
+    upload_dir=UPLOAD_DIR,
+    chunk_size=800
+):
+    if not is_supported_file(filename):
+        raise_unsupported_file_type_error()
+
+    file_path = save_uploaded_file(filename, content, upload_dir=upload_dir)
+
+    return ingest_document_file(
+        file_path,
+        original_filename=filename,
+        db_path=db_path,
+        chunk_size=chunk_size
+    )
+
+
+def ingest_markdown_file(
+    file_path,
+    original_filename=None,
+    db_path=DATABASE_FILE,
+    chunk_size=800
+):
+    return ingest_document_file(
+        file_path,
+        original_filename=original_filename,
+        db_path=db_path,
+        chunk_size=chunk_size
+    )
+
+
 def ingest_markdown_upload(
     filename,
     content,
@@ -134,15 +179,11 @@ def ingest_markdown_upload(
     upload_dir=UPLOAD_DIR,
     chunk_size=800
 ):
-    if not is_markdown_file(filename):
-        raise ValueError("Only Markdown files are supported in this ingestion phase.")
-
-    file_path = save_uploaded_file(filename, content, upload_dir=upload_dir)
-
-    return ingest_markdown_file(
-        file_path,
-        original_filename=filename,
+    return ingest_document_upload(
+        filename,
+        content,
         db_path=db_path,
+        upload_dir=upload_dir,
         chunk_size=chunk_size
     )
 
