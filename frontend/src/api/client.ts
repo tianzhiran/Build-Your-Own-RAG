@@ -1,4 +1,12 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
+function getDefaultApiBaseUrl() {
+  if (typeof window === "undefined") {
+    return "http://127.0.0.1:8000";
+  }
+
+  return `${window.location.protocol}//${window.location.hostname}:8000`;
+}
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || getDefaultApiBaseUrl();
 
 export type DocumentRecord = {
   document_id: string;
@@ -36,7 +44,16 @@ function extractErrorMessage(payload: string) {
 }
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, options);
+  let response: Response;
+
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, options);
+  } catch {
+    throw new Error(
+      `Failed to fetch ${API_BASE_URL}${path}. Make sure the FastAPI backend is running and reachable.`
+    );
+  }
+
   const payload = await response.text();
 
   if (!response.ok) {

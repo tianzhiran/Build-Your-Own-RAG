@@ -539,3 +539,18 @@ FastAPI API docs: http://127.0.0.1:8000/docs
 
 Use `VITE_API_BASE_URL` if the backend runs on a different URL.
 
+### Frontend upload troubleshooting
+
+If the frontend shows `Failed to fetch` while uploading, check that the FastAPI backend is running at the same host on port `8000`. The frontend automatically calls `http://<current-browser-host>:8000` unless `VITE_API_BASE_URL` is set.
+
+Examples:
+
+```bash
+# terminal 1
+uvicorn api:app --reload
+
+# terminal 2
+cd frontend
+npm run dev
+```
+
