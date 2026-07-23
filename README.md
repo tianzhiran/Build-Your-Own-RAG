@@ -510,3 +510,32 @@ Use this when you upload the wrong file, for example an outdated `OTN_manual_v1.
 
 A detailed Chinese summary of the current RAG backend and the recommended iteration plan for TXT, PDF, metadata, retrieval-quality, frontend, and production-readiness work is available in [`SYSTEM_OVERVIEW_AND_ROADMAP.md`](SYSTEM_OVERVIEW_AND_ROADMAP.md).
 
+---
+
+## 14. Frontend MVP
+
+A lightweight React + Vite frontend is available in `frontend/`. It provides:
+
+- A Notion/Linear-inspired knowledge library page for uploading Markdown/TXT/PDF files.
+- A document list with status and delete actions.
+- A chat panel that calls the FastAPI `/ask` endpoint.
+- Expandable source/context display for retrieved chunks.
+
+Run it in development mode:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Default local URLs:
+
+```text
+Frontend: http://127.0.0.1:5173
+FastAPI backend: http://127.0.0.1:8000
+FastAPI API docs: http://127.0.0.1:8000/docs
+```
+
+Use `VITE_API_BASE_URL` if the backend runs on a different URL.
+

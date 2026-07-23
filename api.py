@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi import File
 from fastapi import HTTPException
 from fastapi import UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from document_service import delete_document_by_id
@@ -10,6 +11,17 @@ from document_service import ingest_document_upload
 
 
 app = FastAPI(title="Mini RAG Backend")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://127.0.0.1:5173",
+        "http://localhost:5173"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
 rag_service = None
 
