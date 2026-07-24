@@ -553,4 +553,9 @@ uvicorn api:app --reload
 cd frontend
 npm run dev
 ```
+---
+
+## 15. Mentor Optimization Plan
+
+A detailed Chinese implementation plan for mentor feedback is available in [`MENTOR_RAG_OPTIMIZATION_PLAN.md`](MENTOR_RAG_OPTIMIZATION_PLAN.md). It covers reranking, cross-document evaluation, vector storage study, logging, debugging, architecture understanding, and configurable RAG parameters.
 
